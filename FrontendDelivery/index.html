@@ -1,0 +1,401 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Optimización de Rutas y Logística</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div id="toast-notificacion" class="toast hidden"></div>
+    <div id="modal-confirmacion" class="modal-backdrop hidden">
+      <div class="modal-box">
+        <h4 id="modal-titulo">Confirmación Requerida</h4>
+        <p id="modal-mensaje">¿Está seguro de realizar esta acción?</p>
+        <div class="modal-acciones">
+          <button class="btn btn-outline" id="btn-modal-cancelar">
+            Cancelar
+          </button>
+          <button class="btn btn-danger" id="btn-modal-confirmar">
+            Aceptar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegación Lateral -->
+    <nav id="nav-tabs">
+      <div class="nav-brand">
+        <span class="brand-badge">RL</span>
+        <span class="brand-text">RED LOGÍSTICA</span>
+      </div>
+      <button
+        class="tab-btn active"
+        onclick="window.cambiarTab('tab-clientes')"
+      >
+        Puntos
+      </button>
+      <button class="tab-btn" onclick="window.cambiarTab('tab-rutas')">
+        Rutas
+      </button>
+      <button class="tab-btn" onclick="window.cambiarTab('tab-tramos')">
+        Tramos
+      </button>
+      <button class="tab-btn" onclick="window.cambiarTab('tab-complejidad')">
+        Métricas
+      </button>
+      <button class="tab-btn" onclick="window.cambiarTab('tab-simulacion')">
+        Simulación
+      </button>
+      <button class="tab-btn" onclick="window.cambiarTab('tab-finanzas')">
+        Finanzas
+      </button>
+    </nav>
+
+    <!-- Panel Lateral de Operaciones -->
+    <aside id="sidebar">
+      <header class="app-header">
+        <h2>Panel de Control</h2>
+        <span id="tab-subtitulo" class="subtitle"
+          >Gestión de Clientes y Paradas</span
+        >
+      </header>
+
+      <!-- SECCIÓN 1: PUNTOS Y CLIENTES -->
+      <div id="tab-clientes" class="tab-content active">
+        <h3>Registrar Punto de Entrega</h3>
+        <p class="section-desc">
+          Seleccione una ubicación en el mapa o ingrese las coordenadas:
+        </p>
+
+        <div class="form-group">
+          <input
+            type="text"
+            id="inp-nombre"
+            placeholder="Nombre de parada o cliente"
+          />
+          <input
+            type="text"
+            id="inp-distrito"
+            placeholder="Distrito detectado"
+          />
+        </div>
+        <div class="form-group">
+          <input
+            type="number"
+            step="0.0001"
+            id="inp-lat"
+            placeholder="Latitud"
+          />
+          <input
+            type="number"
+            step="0.0001"
+            id="inp-lng"
+            placeholder="Longitud"
+          />
+        </div>
+        <div class="form-group">
+          <input
+            type="number"
+            step="0.1"
+            id="inp-peso"
+            placeholder="Peso del pedido (kg)"
+            value="2.5"
+          />
+          <input
+            type="text"
+            id="inp-desc"
+            placeholder="Descripción de la carga"
+            value="Paquete regular"
+          />
+        </div>
+        <button
+          class="btn btn-primary w-100"
+          onclick="window.agregarClienteManual()"
+        >
+          Guardar Punto
+        </button>
+
+        <h3 class="mt-3">Catálogo de Puntos Registrados</h3>
+        <div id="lista-clientes-catalogo" class="list-container"></div>
+      </div>
+
+      <!-- SECCIÓN 2: RUTEO TSP -->
+      <div id="tab-rutas" class="tab-content">
+        <h3>Planificación de Despacho</h3>
+        <p class="section-desc">
+          Seleccione las paradas activas para generar el recorrido:
+        </p>
+        <div id="contenedor-checkpoints" class="checkbox-container"></div>
+
+        <div class="grid-buttons mt-2">
+          <button
+            class="btn btn-primary"
+            onclick="window.calcularRutaOptima('greedy')"
+          >
+            Método Voraz
+          </button>
+          <button
+            class="btn btn-success"
+            onclick="window.calcularRutaOptima('fuerza_bruta')"
+          >
+            Fuerza Bruta
+          </button>
+          <button
+            class="btn btn-purple"
+            onclick="window.calcularRutaOptima('dinamica')"
+          >
+            Prog. Dinámica
+          </button>
+          <button
+            class="btn btn-orange"
+            onclick="window.calcularRutaOptima('backtracking')"
+          >
+            Backtracking
+          </button>
+        </div>
+
+        <div id="panel-tsp" class="card hidden mt-2">
+          <div class="card-header">
+            <span class="badge" id="badge-metodo">ESTRATEGIA</span>
+            <span class="tag-dist" id="tag-distancia">0.0 km</span>
+          </div>
+          <p class="stat-text">
+            <b>Carga Acumulada:</b>
+            <span id="stat-peso" class="badge-peso">0.0 kg</span>
+          </p>
+          <p class="stat-text">
+            <b>Tiempo de Procesamiento:</b> <span id="stat-tiempo"></span> s
+          </p>
+          <p class="stat-text"><b>Secuencia de Recorrido:</b></p>
+          <div id="stat-ruta" class="route-box"></div>
+          <p class="stat-text"><b>Disponibilidad por Vehículo:</b></p>
+          <ul id="lista-vehiculos" class="vehicle-list"></ul>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: TRAMOS VIALES -->
+      <div id="tab-tramos" class="tab-content">
+        <h3>Medición de Tramos Viales</h3>
+        <p class="section-desc">
+          Defina el punto inicial y final sobre el mapa para calcular la
+          distancia:
+        </p>
+
+        <div class="form-group">
+          <input
+            type="text"
+            id="inp-tramo-origen"
+            placeholder="Punto de Origen"
+          />
+          <button
+            class="btn btn-secondary"
+            style="width: 75px"
+            id="btn-pick-origen"
+            onclick="window.activarModoSeleccionTramo('origen')"
+          >
+            Fijar A
+          </button>
+        </div>
+
+        <div class="form-group">
+          <input
+            type="text"
+            id="inp-tramo-destino"
+            placeholder="Punto de Destino"
+          />
+          <button
+            class="btn btn-secondary"
+            style="width: 75px"
+            id="btn-pick-destino"
+            onclick="window.activarModoSeleccionTramo('destino')"
+          >
+            Fijar B
+          </button>
+        </div>
+
+        <div class="form-group">
+          <input
+            type="number"
+            step="0.1"
+            id="inp-tramo-km"
+            placeholder="Distancia (km calculados)"
+          />
+          <button
+            class="btn btn-dark"
+            style="width: 120px"
+            onclick="window.autocalcularKmTramo()"
+          >
+            Medir Tramo
+          </button>
+        </div>
+
+        <button class="btn btn-primary w-100" onclick="window.guardarTramo()">
+          Registrar Tramo
+        </button>
+
+        <h3 class="mt-3">Ordenamiento de Tramos</h3>
+        <button class="btn btn-info w-100" onclick="window.ordenarTramos()">
+          Comparar Burbuja y QuickSort
+        </button>
+        <div id="panel-tramos-ordenados" class="card hidden mt-2"></div>
+
+        <h3 class="mt-3">Evaluación de Flota en Tramos</h3>
+        <button
+          class="btn btn-dark w-100"
+          onclick="window.evaluarFlotaTramos()"
+        >
+          Calcular Tiempos de Flota
+        </button>
+        <div id="panel-flota-tramos" class="card hidden mt-2"></div>
+      </div>
+
+      <!-- SECCIÓN 4: MÉTRICAS Y ANÁLISIS -->
+      <div id="tab-complejidad" class="tab-content">
+        <h3>Matriz de Distancias Euclidianas</h3>
+        <button
+          class="btn btn-dark w-100"
+          onclick="window.verMatrizEuclidiana()"
+        >
+          Generar Matriz
+        </button>
+        <div
+          id="panel-matriz"
+          class="card hidden mt-2"
+          style="overflow-x: auto"
+        ></div>
+
+        <h3 class="mt-3">Comparativa de Algoritmos</h3>
+        <button
+          class="btn btn-primary w-100"
+          onclick="window.verComparativaGlobal()"
+        >
+          Ejecutar Análisis Estadístico
+        </button>
+        <div id="panel-complejidad" class="card hidden mt-2">
+          <canvas
+            id="chart-tsp-comparativa"
+            style="max-height: 240px; margin-bottom: 10px"
+          ></canvas>
+          <div id="detalle-rutas-tsp"></div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 5: SIMULACIÓN DE TRÁFICO -->
+      <div id="tab-simulacion" class="tab-content">
+        <h3>Simulación Monte Carlo</h3>
+        <p class="section-desc">
+          Ejecuta 5,000 iteraciones probabilísticas evaluando variaciones de
+          tráfico urbano:
+        </p>
+
+        <div class="form-group">
+          <input
+            type="number"
+            id="inp-sim-dist"
+            placeholder="Distancia en km (0 para ruta actual)"
+            value="0"
+          />
+        </div>
+        <button class="btn btn-dark w-100" onclick="window.simularTrafico()">
+          Iniciar Simulación
+        </button>
+        <div id="panel-montecarlo" class="card hidden mt-2"></div>
+
+        <h3 class="mt-3">Cotizador Directo Punto a Punto</h3>
+        <div class="form-group">
+          <input type="text" id="inp-dir-origen" placeholder="Origen" />
+          <button
+            class="btn btn-secondary"
+            style="width: 75px"
+            id="btn-pick-dir-origen"
+            onclick="window.activarModoSeleccionDirecta('origen')"
+          >
+            Fijar A
+          </button>
+        </div>
+        <div class="form-group">
+          <input type="text" id="inp-dir-destino" placeholder="Destino" />
+          <button
+            class="btn btn-secondary"
+            style="width: 75px"
+            id="btn-pick-dir-destino"
+            onclick="window.activarModoSeleccionDirecta('destino')"
+          >
+            Fijar B
+          </button>
+        </div>
+        <div class="form-group">
+          <input
+            type="number"
+            id="inp-dir-km"
+            placeholder="Distancia (km)"
+            value="20"
+          />
+          <select id="sel-dir-vehiculo" class="select-box">
+            <option value="Moto">Moto (40 km/h)</option>
+            <option value="Bicicleta">Bicicleta (15 km/h)</option>
+            <option value="Auto">Auto (30 km/h)</option>
+          </select>
+        </div>
+        <button class="btn btn-info w-100" onclick="window.cotizarDirecta()">
+          Estimar Tiempo de Entrega
+        </button>
+        <div id="panel-directa" class="card hidden mt-2"></div>
+      </div>
+
+      <!-- SECCIÓN 6: FINANZAS Y CONFIGURACIÓN -->
+      <div id="tab-finanzas" class="tab-content">
+        <h3>Calculadora de Vueltos en Efectivo</h3>
+        <p class="section-desc">
+          Desglose óptimo de denominaciones mediante algoritmo voraz:
+        </p>
+        <div class="input-inline">
+          <input
+            type="number"
+            id="inp-pago"
+            placeholder="Monto abonado"
+            value="200"
+          />
+          <input
+            type="number"
+            id="inp-costo"
+            placeholder="Costo del pedido"
+            value="50"
+          />
+        </div>
+        <button
+          class="btn btn-warning w-100 mt-2"
+          onclick="window.calcularCambio()"
+        >
+          Desglosar Monedas
+        </button>
+        <div id="panel-vuelto-calc" class="card hidden mt-2"></div>
+
+        <h3 class="mt-3">Restablecimiento del Sistema</h3>
+        <p class="section-desc">
+          Reinicia los clientes y tramos a sus parámetros de fábrica:
+        </p>
+        <button
+          class="btn btn-outline w-100"
+          onclick="window.solicitarRestablecimiento()"
+        >
+          Restablecer Datos
+        </button>
+      </div>
+    </aside>
+
+    <!-- Visualizador de Mapa -->
+    <main id="map"></main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
