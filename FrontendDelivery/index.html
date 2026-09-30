@@ -104,15 +104,15 @@
             type="number"
             step="0.1"
             id="inp-peso"
-            placeholder="Peso del pedido (kg)"
-            value="2.5"
+            placeholder="Ingresar peso por KG."
           />
-          <input
-            type="text"
-            id="inp-desc"
-            placeholder="Descripción de la carga"
-            value="Paquete regular"
-          />
+          <select id="inp-desc" class="select-box" required>
+          <option value="" selected disabled hidden>Seleccione tipo de carga</option>
+          <option value="Paquete regular">Paquete regular</option>
+          <option value="Paquete frágil">Paquete frágil</option>
+          <option value="Carga pesada">Carga pesada</option>
+          <option value="Documentos / Express">Documentos / Express</option>
+        </select> 
         </div>
         <button
           class="btn btn-primary w-100"
