@@ -11,7 +11,7 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 
 # ==============================================================================
-# 1. BACKTRACKING CON PODA (Búsqueda paso a paso descartando rutas malas)
+#  BACKTRACKING CON PODA (Búsqueda paso a paso descartando rutas malas)
 # ==============================================================================
 def resolver_backtracking(matriz):
     """
@@ -29,27 +29,19 @@ def resolver_backtracking(matriz):
     mejor_ruta = [[]]
 
     def _backtrack(actual, visitados_count, dist_acumulada, ruta_actual):
-        # PODA: Si el costo acumulado ya supera la mejor distancia registrada, no continuamos
         if dist_acumulada >= mejor_distancia[0]:
             return
-
-        # CASO BASE: Si visitamos todos los nodos, retornamos al origen (nodo 0)
         if visitados_count == n:
             dist_total = dist_acumulada + matriz[actual][0]
             if dist_total < mejor_distancia[0]:
                 mejor_distancia[0] = dist_total
                 mejor_ruta[0] = list(ruta_actual) + [0]
             return
-
-        # PASO RECURSIVO: Probar todos los vecinos no visitados
         for siguiente in range(n):
             if not visitados[siguiente]:
                 visitados[siguiente] = True
                 ruta_actual.append(siguiente)
-
                 _backtrack(siguiente, visitados_count + 1, dist_acumulada + matriz[actual][siguiente], ruta_actual)
-
-                # BACKTRACK: Deshacer la selección para evaluar la siguiente posibilidad
                 ruta_actual.pop()
                 visitados[siguiente] = False
 
@@ -58,7 +50,7 @@ def resolver_backtracking(matriz):
 
 
 # ==============================================================================
-# 2. PROGRAMACIÓN DINÁMICA (Optimización guardando resultados en memoria)
+#  PROGRAMACIÓN DINÁMICA 
 # ==============================================================================
 def resolver_programacion_dinamica(matriz):
     """
@@ -73,19 +65,14 @@ def resolver_programacion_dinamica(matriz):
     memo = {}
 
     def _held_karp(mask, pos):
-        # Caso base: Todos los nodos han sido visitados (todos los bits en 1)
         if mask == (1 << n) - 1:
             return matriz[pos][0], [pos, 0]
-
         estado = (mask, pos)
         if estado in memo:
             return memo[estado]
-
         ans = float('inf')
         mejor_camino = []
-
         for nxt in range(n):
-            # Si el nodo 'nxt' no ha sido visitado
             if not (mask & (1 << nxt)):
                 nuevo_costo, camino = _held_karp(mask | (1 << nxt), nxt)
                 costo_total = matriz[pos][nxt] + nuevo_costo
@@ -101,7 +88,7 @@ def resolver_programacion_dinamica(matriz):
 
 
 # ==============================================================================
-# 3. ALGORITMO PROBABILISTA (Simulación de tráfico con imprevistos)
+# ALGORITMO PROBABILISTA (Simulación de tráfico con imprevistos)
 # ==============================================================================
 def simular_trafico_monte_carlo(distancia_base_km, velocidad_base_kmh=30.0, num_simulaciones=5000):
     """
@@ -114,7 +101,6 @@ def simular_trafico_monte_carlo(distancia_base_km, velocidad_base_kmh=30.0, num_
     tiempos_simulados = []
 
     for _ in range(num_simulaciones):
-        # Factor probabilista de tráfico (simula hora punta o imprevistos entre 0.8x y 1.6x)
         factor_congestion = random.uniform(0.8, 1.6)
         vel_efectiva = velocidad_base_kmh / factor_congestion
         tiempo_min = (distancia_base_km / vel_efectiva) * 60.0
@@ -130,7 +116,7 @@ def simular_trafico_monte_carlo(distancia_base_km, velocidad_base_kmh=30.0, num_
 
 
 # ==============================================================================
-# 4. EVALUACIÓN EN PARALELO (Probar varios caminos al mismo tiempo)
+# EVALUACIÓN EN PARALELO (Probar varios caminos al mismo tiempo)
 # ==============================================================================
 def _evaluar_subruta_worker(args):
     """
@@ -154,11 +140,7 @@ def resolver_tsp_paralelo(matriz):
     nodos_intermedios = list(range(1, n))
     permutaciones = list(itertools.permutations(nodos_intermedios))
     tareas = [(matriz, p) for p in permutaciones]
-
-    # Distribución en paralelo usando múltiples núcleos
     with ProcessPoolExecutor() as executor:
         resultados = list(executor.map(_evaluar_subruta_worker, tareas))
-
-    # Selección del mejor resultado calculado
     dist_min, ruta_min = min(resultados, key=lambda x: x[0])
     return ruta_min, round(dist_min, 2)

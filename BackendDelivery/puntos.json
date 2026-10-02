@@ -53,27 +53,5 @@
     "y": 8.0,
     "peso_kg": 6.0,
     "descripcion_pedido": "Ropa"
-  },
-  {
-    "id": 5,
-    "nombre": "Libia",
-    "distrito": "San Juan de Lurigancho",
-    "lat": -12.02522,
-    "lng": -77.02137,
-    "x": 8.1,
-    "y": 1.5,
-    "peso_kg": 15.0,
-    "descripcion_pedido": "Paquete regular"
-  },
-  {
-    "id": 7,
-    "nombre": "Jairo",
-    "distrito": "Urbanización Cercado de Lima",
-    "lat": -12.04843,
-    "lng": -77.03309,
-    "x": 5.4,
-    "y": 0.2,
-    "peso_kg": 25.0,
-    "descripcion_pedido": "Carga pesada"
   }
 ]

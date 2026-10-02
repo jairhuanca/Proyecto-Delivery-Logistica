@@ -9,9 +9,6 @@ GESTION DE TRAMOS, ORDENAMIENTO Y CAMBIO VORAZ
 """
 
 def crear_tramo(origen, destino, kilometros):
-    #Esta función crea y organiza los datos de un tramo de viaje en un formato estructurado de diccionario. 
-    #Recibe un punto de partida, un destino y la distancia, asegura que los kilómetros se registren como un número decimal y 
-    #agrupa toda la información en un solo objeto fácil de usar.
     return {
         "origen": origen,
         "destino": destino,
@@ -19,14 +16,9 @@ def crear_tramo(origen, destino, kilometros):
     }
 
 def calcular_distancia_total(lista_rutas):
-    #Calcula la distancia total acumulada de un viaje sumando los kilómetros de cada uno de sus tramos. 
-    #Recorre una lista de rutas para extraer el valor de los kilómetros de cada sección y devuelve la suma de todo el recorrido.
     return sum(tramo["kilometros"] for tramo in lista_rutas)
 
 def ordenamiento_burbuja_tramos(lista_rutas, clave="kilometros"):
-    #Esta función ordena una lista de rutas de menor a mayor comparando y acomodando los elementos de forma consecutiva.
-    #Utiliza el algoritmo de ordenamiento burbuja (Bubble Sort), el cual revisa la lista repetidamente para intercambiar 
-    #las posiciones de las rutas contiguas si están en el orden incorrecto según la característica elegida (como los kilómetros).
 
     lista = list(lista_rutas)
     n = len(lista)
@@ -37,8 +29,6 @@ def ordenamiento_burbuja_tramos(lista_rutas, clave="kilometros"):
     return lista
 
 def ordenamiento_quicksort_tramos(lista_rutas, clave="kilometros"):
-   #Acomoda los caminos del más corto al más largo eligiendo un tramo como guía 
-   #y separando los demás entre los que miden menos y los que miden más.
     
     if len(lista_rutas) <= 1:
         return lista_rutas
@@ -51,9 +41,6 @@ def ordenamiento_quicksort_tramos(lista_rutas, clave="kilometros"):
     return ordenamiento_quicksort_tramos(menores, clave) + iguales + ordenamiento_quicksort_tramos(mayores, clave)
 
 def cambio_monedas_delivery(denominaciones, monto):
-    #Función que calcula la menor cantidad de monedas necesarias para dar un vuelto.
-    #Utiliza un enfoque voraz que consiste en repartir primero las monedas de mayor valor hasta cubrir el total, 
-    #devolviendo el desglose de las monedas utilizadas y el saldo restante que no se pudo simplificar.
 
     denominaciones_ord = sorted(denominaciones, reverse=True)
     resultado = []

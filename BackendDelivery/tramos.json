@@ -18,25 +18,5 @@
     "origen": "Miraflores",
     "destino": "Surco",
     "kilometros": 6.2
-  },
-  {
-    "origen": "San Juan de Lurigancho",
-    "destino": "Santa Anita",
-    "kilometros": 9.18
-  },
-  {
-    "origen": "Quinta Olavide",
-    "destino": "Barrio Chino",
-    "kilometros": 1.53
-  },
-  {
-    "origen": "Collique Zona 2",
-    "destino": "Alameda Algarrobos",
-    "kilometros": 5.52
-  },
-  {
-    "origen": "Ventanilla",
-    "destino": "La Ensenada",
-    "kilometros": 18.13
   }
 ]

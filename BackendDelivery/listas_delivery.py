@@ -199,32 +199,27 @@ def menu():
             print("\n============================================================")
             print("         EVALUACIÓN Y COMPARATIVA DE ESTRATEGIAS TSP")
             print("============================================================")
-            
-            # 1. FUERZA BRUTA
+          
             inicio = time.perf_counter()
             ruta_fb, dist_fb = resolver_fuerza_bruta(matriz_distancias)
             t_fb = time.perf_counter() - inicio
             print(f"1. FUERZA BRUTA     | Dist: {dist_fb:.2f} km | Tiempo: {t_fb:.6f} s | Ruta: {formatear_ruta(ruta_fb)}")
-            
-            # 2. GREEDY (VORAZ)
+  
             inicio = time.perf_counter()
             ruta_gr, dist_gr = resolver_greedy(matriz_distancias)
             t_gr = time.perf_counter() - inicio
             print(f"2. GREEDY (VORAZ)   | Dist: {dist_gr:.2f} km | Tiempo: {t_gr:.6f} s | Ruta: {formatear_ruta(ruta_gr)}")
-            
-            # 3. BACKTRACKING CON PODA
+  
             inicio = time.perf_counter()
             ruta_bt, dist_bt = resolver_backtracking(matriz_distancias)
             t_bt = time.perf_counter() - inicio
             print(f"3. BACKTRACKING     | Dist: {dist_bt:.2f} km | Tiempo: {t_bt:.6f} s | Ruta: {formatear_ruta(ruta_bt)}")
-            
-            # 4. PROGRAMACIÓN DINÁMICA (HELD-KARP)
+    
             inicio = time.perf_counter()
             ruta_dp, dist_dp = resolver_programacion_dinamica(matriz_distancias)
             t_dp = time.perf_counter() - inicio
             print(f"4. PROG. DINÁMICA   | Dist: {dist_dp:.2f} km | Tiempo: {t_dp:.6f} s | Ruta: {formatear_ruta(ruta_dp)}")
-            
-            # 5. TSP EN PARALELO
+
             try:
                 inicio = time.perf_counter()
                 ruta_par, dist_par = resolver_tsp_paralelo(matriz_distancias)
