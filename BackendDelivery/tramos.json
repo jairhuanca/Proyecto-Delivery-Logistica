@@ -23,5 +23,15 @@
     "origen": "El Agustino",
     "destino": "San Borja",
     "kilometros": 7.85
+  },
+  {
+    "origen": "San Juan de Lurigancho",
+    "destino": "Rimac",
+    "kilometros": 5.71
+  },
+  {
+    "origen": "San Juan de Lurigancho",
+    "destino": "Independencia",
+    "kilometros": 12.47
   }
 ]

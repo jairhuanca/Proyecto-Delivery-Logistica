@@ -55,6 +55,7 @@
     "descripcion_pedido": "Ropa"
   },
   {
+
     "id": 5,
     "nombre": "Cliente A - San Isidro",
     "distrito": "Breña",
@@ -75,5 +76,5 @@
     "y": -3.0,
     "peso_kg": 10.0,
     "descripcion_pedido": "Paquete regular"
-  }
+  } 
 ]
