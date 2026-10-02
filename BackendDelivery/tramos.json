@@ -18,40 +18,5 @@
     "origen": "Miraflores",
     "destino": "Surco",
     "kilometros": 6.2
-  },
-  {
-    "origen": "El Agustino",
-    "destino": "San Borja",
-    "kilometros": 7.85
-  },
-  {
-    "origen": "San Juan de Lurigancho",
-    "destino": "Rimac",
-    "kilometros": 5.71
-  },
-  {
-    "origen": "San Juan de Lurigancho",
-    "destino": "Independencia",
-    "kilometros": 12.47
-  },
-  {
-    "origen": "Santa Anita",
-    "destino": "Breña",
-    "kilometros": 15.56
-  },
-  {
-    "origen": "Rimac",
-    "destino": "El Agustino",
-    "kilometros": 7.52
-  },
-  {
-    "origen": "Urbanización Unión",
-    "destino": "Rimac",
-    "kilometros": 3.13
-  },
-  {
-    "origen": "San Juan de Lurigancho",
-    "destino": "Rimac",
-    "kilometros": 3.19
   }
 ]
