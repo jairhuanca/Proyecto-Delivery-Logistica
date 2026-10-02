@@ -53,5 +53,16 @@
     "y": 8.0,
     "peso_kg": 6.0,
     "descripcion_pedido": "Ropa"
+  },
+  {
+    "id": 6,
+    "nombre": "Roberto",
+    "distrito": "Huaycán",
+    "lat": -12.01346,
+    "lng": -76.82234,
+    "x": 25.3,
+    "y": 23.5,
+    "peso_kg": 25.0,
+    "descripcion_pedido": "Carga pesada"
   }
 ]

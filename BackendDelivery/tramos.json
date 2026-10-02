@@ -18,5 +18,15 @@
     "origen": "Miraflores",
     "destino": "Surco",
     "kilometros": 6.2
+  },
+  {
+    "origen": "San Juan de Lurigancho",
+    "destino": "Rimac",
+    "kilometros": 5.71
+  },
+  {
+    "origen": "San Juan de Lurigancho",
+    "destino": "Independencia",
+    "kilometros": 12.47
   }
 ]
