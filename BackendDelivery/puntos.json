@@ -1,0 +1,79 @@
+[
+  {
+    "id": 0,
+    "nombre": "Almacen Central",
+    "distrito": "San Isidro",
+    "lat": -12.0969,
+    "lng": -77.0345,
+    "x": 0.0,
+    "y": 0.0,
+    "peso_kg": 0.0,
+    "descripcion_pedido": "Base Central"
+  },
+  {
+    "id": 1,
+    "nombre": "Cliente A - San Isidro",
+    "distrito": "San Isidro",
+    "lat": -12.105,
+    "lng": -77.03,
+    "x": 3.0,
+    "y": 4.0,
+    "peso_kg": 3.5,
+    "descripcion_pedido": "Documentos"
+  },
+  {
+    "id": 2,
+    "nombre": "Cliente B - Miraflores",
+    "distrito": "Miraflores",
+    "lat": -12.1215,
+    "lng": -77.0298,
+    "x": 6.0,
+    "y": 1.0,
+    "peso_kg": 4.0,
+    "descripcion_pedido": "Paquete tech"
+  },
+  {
+    "id": 3,
+    "nombre": "Cliente C - Santiago Surco",
+    "distrito": "Santiago Surco",
+    "lat": -12.138,
+    "lng": -76.995,
+    "x": 7.0,
+    "y": 5.0,
+    "peso_kg": 2.0,
+    "descripcion_pedido": "Repuestos"
+  },
+  {
+    "id": 4,
+    "nombre": "Cliente D - San Borja",
+    "distrito": "San Borja",
+    "lat": -12.087,
+    "lng": -77.0035,
+    "x": 2.0,
+    "y": 8.0,
+    "peso_kg": 6.0,
+    "descripcion_pedido": "Ropa"
+  },
+  {
+    "id": 5,
+    "nombre": "Libia",
+    "distrito": "San Juan de Lurigancho",
+    "lat": -12.02522,
+    "lng": -77.02137,
+    "x": 8.1,
+    "y": 1.5,
+    "peso_kg": 15.0,
+    "descripcion_pedido": "Paquete regular"
+  },
+  {
+    "id": 7,
+    "nombre": "Jairo",
+    "distrito": "Urbanización Cercado de Lima",
+    "lat": -12.04843,
+    "lng": -77.03309,
+    "x": 5.4,
+    "y": 0.2,
+    "peso_kg": 25.0,
+    "descripcion_pedido": "Carga pesada"
+  }
+]

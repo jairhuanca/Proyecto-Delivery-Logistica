@@ -1,0 +1,42 @@
+[
+  {
+    "origen": "San Isidro",
+    "destino": "Miraflores",
+    "kilometros": 3.6
+  },
+  {
+    "origen": "Almacen Central",
+    "destino": "San Isidro",
+    "kilometros": 5.0
+  },
+  {
+    "origen": "Surco",
+    "destino": "San Borja",
+    "kilometros": 5.8
+  },
+  {
+    "origen": "Miraflores",
+    "destino": "Surco",
+    "kilometros": 6.2
+  },
+  {
+    "origen": "San Juan de Lurigancho",
+    "destino": "Santa Anita",
+    "kilometros": 9.18
+  },
+  {
+    "origen": "Quinta Olavide",
+    "destino": "Barrio Chino",
+    "kilometros": 1.53
+  },
+  {
+    "origen": "Collique Zona 2",
+    "destino": "Alameda Algarrobos",
+    "kilometros": 5.52
+  },
+  {
+    "origen": "Ventanilla",
+    "destino": "La Ensenada",
+    "kilometros": 18.13
+  }
+]

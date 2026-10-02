@@ -6,21 +6,19 @@ let ultimoMetodoUsado = "greedy";
 let distanciaRutaActualKm = 25.15;
 let chartComparativaTSP = null;
 
-// Modos de selección de tramos (Pestaña Tramos)
 window.modoSeleccionTramo = null;
 let coordOrigenTramo = null;
 let coordDestinoTramo = null;
 
-// Modos de selección directa (Pestaña Simulación)
 window.modoSeleccionDirecta = null;
 let coordDirOrigen = null;
 let coordDirDestino = null;
 
 const COLORES_METODO = {
-  greedy: "#2563eb",
-  fuerza_bruta: "#16a34a",
-  dinamica: "#7c3aed",
-  backtracking: "#ea580c",
+  greedy: "#F05816",
+  fuerza_bruta: "#80C27A",
+  dinamica: "#0F0F0F",
+  backtracking: "#d97706",
 };
 
 const SUBTITULOS = {
@@ -32,9 +30,6 @@ const SUBTITULOS = {
   "tab-finanzas": "Desglose Monetario y Parámetros",
 };
 
-// -----------------------------------------------------------------------------
-// SISTEMA DE NOTIFICACIONES Y MODALES PERSONALIZADOS
-// -----------------------------------------------------------------------------
 function mostrarMensaje(texto) {
   const toast = document.getElementById("toast-notificacion");
   if (toast) {
@@ -85,26 +80,70 @@ function mostrarConfirmacion(titulo, mensaje, onConfirmar) {
 }
 
 // -----------------------------------------------------------------------------
-// CONTROL DE PESTAÑAS DEL MENÚ
+// CONTROL DEL MENÚ
 // -----------------------------------------------------------------------------
 window.cambiarTab = function (tabId) {
   document
+    .querySelectorAll(".tab-content")
+    .forEach((el) => el.classList.remove("active"));
+  document
     .querySelectorAll(".tab-btn")
     .forEach((btn) => btn.classList.remove("active"));
-  document
-    .querySelectorAll(".tab-content")
-    .forEach((content) => content.classList.remove("active"));
 
-  const btnActivo = event
-    ? event.currentTarget
-    : document.querySelector(`.tab-btn[onclick*="${tabId}"]`);
+  const tabSeleccionada = document.getElementById(tabId);
+  if (tabSeleccionada) tabSeleccionada.classList.add("active");
+
+  const btnActivo = Array.from(document.querySelectorAll(".tab-btn")).find(
+    (b) =>
+      b.getAttribute("onclick") && b.getAttribute("onclick").includes(tabId),
+  );
   if (btnActivo) btnActivo.classList.add("active");
 
-  const contenedor = document.getElementById(tabId);
-  if (contenedor) contenedor.classList.add("active");
+  const sub = document.getElementById("tab-subtitulo");
+  if (sub && SUBTITULOS[tabId]) sub.innerText = SUBTITULOS[tabId];
 
-  const subtitulo = document.getElementById("tab-subtitulo");
-  if (subtitulo) subtitulo.innerText = SUBTITULOS[tabId] || "Panel de Control";
+  window.limpiarFormularioTramos();
+  window.limpiarFormularioPuntos();
+  window.limpiarFormularioSimulacion();
+
+  if (typeof mapApp !== "undefined") {
+    mapApp.limpiarPunteroUbicacion();
+    mapApp.limpiarPinesTramo();
+    if (mapApp.routeGroup) {
+      mapApp.routeGroup.clearLayers();
+    }
+  }
+};
+
+window.limpiarFormularioSimulacion = function () {
+  const inpSimDist = document.getElementById("inp-sim-dist");
+  const panelMonte = document.getElementById("panel-montecarlo");
+  const inpDirOrig = document.getElementById("inp-dir-origen");
+  const inpDirDest = document.getElementById("inp-dir-destino");
+  const inpDirKm = document.getElementById("inp-dir-km");
+  const panelDir = document.getElementById("panel-directa");
+
+  if (inpSimDist) inpSimDist.value = "";
+  if (panelMonte) panelMonte.classList.add("hidden");
+  if (inpDirOrig) inpDirOrig.value = "";
+  if (inpDirDest) inpDirDest.value = "";
+  if (inpDirKm) inpDirKm.value = "";
+  if (panelDir) panelDir.classList.add("hidden");
+
+  coordDirOrigen = null;
+  coordDirDestino = null;
+  window.modoSeleccionDirecta = null;
+
+  const btnA = document.getElementById("btn-pick-dir-origen");
+  const btnB = document.getElementById("btn-pick-dir-destino");
+  if (btnA) {
+    btnA.style.backgroundColor = "";
+    btnA.style.color = "";
+  }
+  if (btnB) {
+    btnB.style.backgroundColor = "";
+    btnB.style.color = "";
+  }
 };
 
 // -----------------------------------------------------------------------------
@@ -132,7 +171,6 @@ async function cargarPuntosYRenderizar() {
 }
 
 function renderizarListas(puntos) {
-  // Pestaña 1: Catálogo General de Puntos
   const cat = document.getElementById("lista-clientes-catalogo");
   if (cat) {
     cat.innerHTML = "";
@@ -159,13 +197,11 @@ function renderizarListas(puntos) {
     });
   }
 
-  // Pestaña 2: Checkpoints para Despacho Dinámico
   const chkCont = document.getElementById("contenedor-checkpoints");
   if (chkCont) {
     chkCont.innerHTML = "";
     puntos.forEach((p) => {
       const esAlmacen = p.id === 0;
-      // Valida si el nombre ya contiene el distrito para no duplicar texto
       const tieneDistritoEnNombre = p.nombre
         .toLowerCase()
         .includes(p.distrito ? p.distrito.toLowerCase() : "");
@@ -204,16 +240,15 @@ window.agregarClienteManual = async function () {
     document.getElementById("inp-distrito").value.trim() || "Lima";
   const lat = parseFloat(document.getElementById("inp-lat").value);
   const lng = parseFloat(document.getElementById("inp-lng").value);
-  const peso = parseFloat(document.getElementById("inp-peso").value) || 1.0;
-  const desc =
-    document.getElementById("inp-desc").value.trim() || "Paquete regular";
+  const peso = parseFloat(document.getElementById("inp-peso").value);
+  const desc = document.getElementById("inp-desc").value.trim();
 
   if (!nombre) {
     inpNombre.classList.add("input-error");
     inpNombre.focus();
     mostrarAviso(
-      "Campo Obligatorio Requerido",
-      "Por favor, ingrese el nombre del cliente o de la parada de entrega antes de guardar.",
+      "Campo Obligatorio",
+      "Por favor, ingrese el nombre del cliente o parada de entrega antes de guardar.",
     );
     return;
   }
@@ -221,8 +256,24 @@ window.agregarClienteManual = async function () {
 
   if (isNaN(lat) || isNaN(lng)) {
     mostrarAviso(
-      "Ubicación No Seleccionada",
-      "Debe hacer clic en el mapa para fijar las coordenadas de entrega (latitud y longitud).",
+      "Ubicación Requerida",
+      "Debe hacer clic en el mapa para fijar la ubicación exacta (latitud y longitud).",
+    );
+    return;
+  }
+
+  if (isNaN(peso) || peso <= 0) {
+    mostrarAviso(
+      "Peso Inválido",
+      "Por favor, ingrese un peso de carga válido en kilogramos mayor a 0.",
+    );
+    return;
+  }
+
+  if (!desc) {
+    mostrarAviso(
+      "Tipo de Carga Requerido",
+      "Por favor, seleccione el tipo de carga en la lista desplegable.",
     );
     return;
   }
@@ -237,12 +288,7 @@ window.agregarClienteManual = async function () {
       descripcion_pedido: desc,
     });
 
-    inpNombre.value = "";
-    document.getElementById("inp-distrito").value = "";
-    document.getElementById("inp-lat").value = "";
-    document.getElementById("inp-lng").value = "";
-    document.getElementById("inp-peso").value = "2.5";
-
+    window.limpiarFormularioPuntos();
     await cargarPuntosYRenderizar();
     mapApp.limpiarPunteroUbicacion();
     mostrarMensaje("Punto de entrega registrado con éxito.");
@@ -273,6 +319,40 @@ window.solicitarEliminacionPunto = function (id) {
   );
 };
 
+window.limpiarFormularioPuntos = function () {
+  const inpNombre = document.getElementById("inp-nombre");
+  const inpDistrito = document.getElementById("inp-distrito");
+  const inpLat = document.getElementById("inp-lat");
+  const inpLng = document.getElementById("inp-lng");
+  const inpPeso = document.getElementById("inp-peso");
+  const inpDesc = document.getElementById("inp-desc");
+
+  if (inpNombre) inpNombre.value = "";
+  if (inpDistrito) inpDistrito.value = "";
+  if (inpLat) inpLat.value = "";
+  if (inpLng) inpLng.value = "";
+  if (inpPeso) inpPeso.value = "";
+  if (inpDesc) inpDesc.selectedIndex = 0;
+
+  if (typeof mapApp !== "undefined" && mapApp.tempMarker) {
+    mapApp.map.removeLayer(mapApp.tempMarker);
+    mapApp.tempMarker = null;
+  }
+};
+
+window.seleccionarAlgoritmo = function (metodo) {
+  document.querySelectorAll(".btn-algoritmo").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+
+  const btnSeleccionado = document.getElementById(`btn-algo-${metodo}`);
+  if (btnSeleccionado) {
+    btnSeleccionado.classList.add("active");
+  }
+
+  window.calcularRutaOptima(metodo);
+};
+
 // -----------------------------------------------------------------------------
 // PLANIFICACIÓN Y TRAZADO TSP
 // -----------------------------------------------------------------------------
@@ -281,12 +361,18 @@ window.calcularRutaOptima = async function (metodo) {
   const ids = obtenerIdsSeleccionados();
 
   if (ids.length < 2) {
-    mostrarMensaje("Seleccione al menos un punto de destino.");
+    mostrarAviso(
+      "Destinos Insuficientes",
+      "Seleccione al menos un punto de destino además de la base central para generar el recorrido.",
+    );
     return;
   }
 
   try {
     const data = await ApiService.calcularRutaOptima(ids, metodo);
+    if (!data || !data.secuencia_ids) {
+      throw new Error("Respuesta inválida del cálculo de ruta.");
+    }
     rutaActualIds = data.secuencia_ids;
     distanciaRutaActualKm = data.distancia_km;
     mostrarPanelRuta(data);
@@ -299,35 +385,50 @@ function mostrarPanelRuta(data) {
   const panel = document.getElementById("panel-tsp");
   panel.classList.remove("hidden");
 
-  document.getElementById("badge-metodo").innerText = data.metodo.toUpperCase();
+  document.getElementById("badge-metodo").innerText = (
+    data.metodo || "ESTRATEGIA"
+  ).toUpperCase();
   document.getElementById("tag-distancia").innerText =
-    `${data.distancia_km} km`;
+    `${data.distancia_km || 0} km`;
   document.getElementById("stat-peso").innerText =
-    `${data.peso_total_carga_kg} kg`;
-  document.getElementById("stat-tiempo").innerText = data.tiempo_computo_s;
-  document.getElementById("stat-ruta").innerText =
-    data.secuencia_nombres.join(" -> ");
+    `${data.peso_total_carga_kg || 0} kg`;
+  document.getElementById("stat-tiempo").innerText =
+    data.tiempo_computo_s || "0";
+  document.getElementById("stat-ruta").innerText = Array.isArray(
+    data.secuencia_nombres,
+  )
+    ? data.secuencia_nombres.join(" -> ")
+    : "Sin ruta calculada";
 
   const listVeh = document.getElementById("lista-vehiculos");
-  listVeh.innerHTML = data.flota_tiempos
-    .map(
-      (v) => `
-    <li>
-      <b>${v.vehiculo}:</b> ${v.tiempo_minutos} min (${v.velocidad_kmh} km/h) 
-      - <span class="${v.es_apto ? "vehicle-badge-ok" : "vehicle-badge-no"}">
-          ${v.es_apto ? "Apto" : "Excede carga máxima (" + v.capacidad_max_kg + " kg)"}
-        </span>
-    </li>
-  `,
-    )
-    .join("");
+  if (Array.isArray(data.flota_tiempos)) {
+    listVeh.innerHTML = data.flota_tiempos
+      .map(
+        (v) => `
+      <li>
+        <b>${v.vehiculo}:</b> ${v.tiempo_minutos} min (${v.velocidad_kmh} km/h) 
+        - <span class="${v.es_apto ? "vehicle-badge-ok" : "vehicle-badge-no"}">
+            ${v.es_apto ? "Apto" : "Excede carga máxima (" + v.capacidad_max_kg + " kg)"}
+          </span>
+      </li>
+    `,
+      )
+      .join("");
+  } else {
+    listVeh.innerHTML = "<li>No hay información de flota disponible.</li>";
+  }
 
-  mapApp.trazarRuta(
-    data.coordenadas_mapa,
-    data.secuencia_ids,
-    puntosMemoria,
-    COLORES_METODO[data.metodo],
-  );
+  if (
+    Array.isArray(data.coordenadas_mapa) &&
+    Array.isArray(data.secuencia_ids)
+  ) {
+    mapApp.trazarRuta(
+      data.coordenadas_mapa,
+      data.secuencia_ids,
+      puntosMemoria,
+      COLORES_METODO[data.metodo] || "#F05816",
+    );
+  }
 }
 
 window.cancelarPedidoEnRuta = function (puntoId) {
@@ -365,26 +466,64 @@ window.cancelarPedidoEnRuta = function (puntoId) {
 // MEDICIÓN Y ORDENAMIENTO DE TRAMOS VIALES
 // -----------------------------------------------------------------------------
 window.activarModoSeleccionTramo = function (tipo) {
-  window.modoSeleccionTramo = tipo;
   const btnA = document.getElementById("btn-pick-origen");
   const btnB = document.getElementById("btn-pick-destino");
 
   if (tipo === "origen") {
-    btnA.style.backgroundColor = "#16a34a";
-    btnA.style.color = "#ffffff";
-    btnB.style.backgroundColor = "";
-    btnB.style.color = "";
-  } else {
-    btnB.style.backgroundColor = "#dc2626";
-    btnB.style.color = "#ffffff";
-    btnA.style.backgroundColor = "";
-    btnA.style.color = "";
+    window.modoSeleccionTramo = "origen";
+
+    if (btnA) {
+      btnA.classList.add("btn-fijar-activo");
+      btnA.style.setProperty("background-color", "#F05816", "important");
+      btnA.style.setProperty("color", "#FFFFFF", "important");
+    }
+    if (btnB) {
+      btnB.classList.remove("btn-fijar-activo");
+      btnB.style.removeProperty("background-color");
+      btnB.style.removeProperty("color");
+    }
+    mostrarMensaje("Haga clic en el mapa para fijar el Origen (A)");
+  } else if (tipo === "destino") {
+    window.modoSeleccionTramo = "destino";
+
+    if (btnB) {
+      btnB.classList.add("btn-fijar-activo");
+      btnB.style.setProperty("background-color", "#F05816", "important");
+      btnB.style.setProperty("color", "#FFFFFF", "important");
+    }
+    if (btnA) {
+      btnA.classList.remove("btn-fijar-activo");
+      btnA.style.removeProperty("background-color");
+      btnA.style.removeProperty("color");
+    }
+    mostrarMensaje("Haga clic en el mapa para fijar el Destino (B)");
   }
+};
+
+window.desactivarBotonesFijar = function () {
+  const btnA = document.getElementById("btn-pick-origen");
+  const btnB = document.getElementById("btn-pick-destino");
+
+  if (btnA) {
+    btnA.classList.remove("btn-fijar-activo");
+    btnA.style.removeProperty("background-color");
+    btnA.style.removeProperty("color");
+  }
+  if (btnB) {
+    btnB.classList.remove("btn-fijar-activo");
+    btnB.style.removeProperty("background-color");
+    btnB.style.removeProperty("color");
+  }
+  window.modoSeleccionTramo = null;
 };
 
 window.manejarClicTramo = async function (lat, lng) {
   const tipo = window.modoSeleccionTramo;
   const lugar = await mapApp.obtenerNombreLugar(lat, lng);
+
+  if (typeof mapApp !== "undefined") {
+    mapApp.limpiarPunteroUbicacion();
+  }
 
   if (tipo === "origen") {
     document.getElementById("inp-tramo-origen").value = lugar;
@@ -396,11 +535,7 @@ window.manejarClicTramo = async function (lat, lng) {
     mapApp.fijarPinTramo("destino", lat, lng, lugar);
   }
 
-  document.getElementById("btn-pick-origen").style.backgroundColor = "";
-  document.getElementById("btn-pick-origen").style.color = "";
-  document.getElementById("btn-pick-destino").style.backgroundColor = "";
-  document.getElementById("btn-pick-destino").style.color = "";
-  window.modoSeleccionTramo = null;
+  window.desactivarBotonesFijar();
 
   if (coordOrigenTramo && coordDestinoTramo) {
     window.calcularDistanciaVial(
@@ -430,7 +565,7 @@ window.calcularDistanciaVial = async function (coordA, coordB, inputTargetId) {
         mapApp.map.removeLayer(mapApp.tramoDirectoLine);
       const coordsCalle = ruta.geometry.coordinates.map((c) => [c[1], c[0]]);
       mapApp.tramoDirectoLine = L.polyline(coordsCalle, {
-        color: "#0284c7",
+        color: "#F05816",
         weight: 5,
         dashArray: "6, 8",
       }).addTo(mapApp.map);
@@ -448,7 +583,10 @@ window.autocalcularKmTramo = async function () {
   const destino = document.getElementById("inp-tramo-destino").value.trim();
 
   if (!origen || !destino) {
-    mostrarMensaje("Ingrese el punto de origen y de destino.");
+    mostrarAviso(
+      "Campos Requeridos",
+      "Por favor, ingrese el punto de origen y el destino para medir el tramo.",
+    );
     return;
   }
 
@@ -485,21 +623,39 @@ window.guardarTramo = async function () {
   const destino = document.getElementById("inp-tramo-destino").value.trim();
   const km = parseFloat(document.getElementById("inp-tramo-km").value);
 
-  if (!origen || !destino || isNaN(km)) {
-    mostrarMensaje("Complete origen, destino y distancia.");
+  if (!origen || !destino || isNaN(km) || km <= 0) {
+    mostrarAviso(
+      "Datos de Tramo Incompletos",
+      "Por favor, ingrese el origen, destino y una distancia calculada mayor a 0 km.",
+    );
     return;
   }
 
   try {
     const res = await ApiService.agregarTramo(origen, destino, km);
     mostrarMensaje(res.mensaje);
-    document.getElementById("inp-tramo-origen").value = "";
-    document.getElementById("inp-tramo-destino").value = "";
-    document.getElementById("inp-tramo-km").value = "";
-    mapApp.limpiarPinesTramo();
+    window.limpiarFormularioTramos();
     window.ordenarTramos();
   } catch (err) {
     mostrarMensaje("Error: " + err.message);
+  }
+};
+
+window.limpiarFormularioTramos = function () {
+  const inpOrig = document.getElementById("inp-tramo-origen");
+  const inpDest = document.getElementById("inp-tramo-destino");
+  const inpKm = document.getElementById("inp-tramo-km");
+
+  if (inpOrig) inpOrig.value = "";
+  if (inpDest) inpDest.value = "";
+  if (inpKm) inpKm.value = "";
+
+  coordOrigenTramo = null;
+  coordDestinoTramo = null;
+  window.desactivarBotonesFijar();
+
+  if (typeof mapApp !== "undefined") {
+    mapApp.limpiarPinesTramo();
   }
 };
 
@@ -507,55 +663,76 @@ window.ordenarTramos = async function () {
   const panel = document.getElementById("panel-tramos-ordenados");
   panel.classList.remove("hidden");
 
-  const data = await ApiService.ordenarTramos();
-  let lista = `<p><b>Tramos Ordenados por Kilometraje (QuickSort):</b></p><ul style="padding-left:16px;">`;
-  data.tramos_ordenados.forEach((t) => {
-    lista += `<li>${t.origen} -> ${t.destino}: <b>${t.kilometros.toFixed(2)} km</b></li>`;
-  });
-  lista += `</ul><p class="stat-text mt-2"><b>Tiempo Burbuja:</b> ${data.tiempo_burbuja_s} s | <b>Tiempo QuickSort:</b> ${data.tiempo_quicksort_s} s</p>`;
-  panel.innerHTML = lista;
+  try {
+    const data = await ApiService.ordenarTramos();
+    if (!data || !Array.isArray(data.tramos_ordenados)) {
+      throw new Error("No hay tramos registrados para ordenar.");
+    }
+    let lista = `<p><b>Tramos Ordenados por Kilometraje (QuickSort):</b></p><ul style="padding-left:16px;">`;
+    data.tramos_ordenados.forEach((t) => {
+      lista += `<li>${t.origen} -> ${t.destino}: <b>${t.kilometros.toFixed(2)} km</b></li>`;
+    });
+    lista += `</ul><p class="stat-text mt-2"><b>Tiempo Burbuja:</b> ${data.tiempo_burbuja_s} s | <b>Tiempo QuickSort:</b> ${data.tiempo_quicksort_s} s</p>`;
+    panel.innerHTML = lista;
+  } catch (err) {
+    panel.innerHTML = `<span style="color:#dc2626;">${err.message}</span>`;
+  }
 };
 
 window.evaluarFlotaTramos = async function () {
   const panel = document.getElementById("panel-flota-tramos");
   panel.classList.remove("hidden");
 
-  const data = await ApiService.evaluarFlotaTramos();
-  let lista = `<p><b>Distancia Total Acumulada:</b> ${data.distancia_total_km} km</p><ul style="padding-left:16px;">`;
-  data.evaluacion.forEach((v) => {
-    lista += `<li>${v.vehiculo} (${v.velocidad_kmh} km/h): <b>${v.tiempo_minutos} min</b></li>`;
-  });
-  lista += `</ul><p class="stat-text mt-2"><b>Vehículo Recomendado:</b> ${data.recomendado}</p>`;
-  panel.innerHTML = lista;
+  try {
+    const data = await ApiService.evaluarFlotaTramos();
+    if (!data || !Array.isArray(data.evaluacion)) {
+      throw new Error("No hay información de flota para evaluar.");
+    }
+    let lista = `<p><b>Distancia Total Acumulada:</b> ${data.distancia_total_km} km</p><ul style="padding-left:16px;">`;
+    data.evaluacion.forEach((v) => {
+      lista += `<li>${v.vehiculo} (${v.velocidad_kmh} km/h): <b>${v.tiempo_minutos} min</b></li>`;
+    });
+    lista += `</ul><p class="stat-text mt-2"><b>Vehículo Recomendado:</b> ${data.recomendado}</p>`;
+    panel.innerHTML = lista;
+  } catch (err) {
+    panel.innerHTML = `<span style="color:#dc2626;">${err.message}</span>`;
+  }
 };
 
 // -----------------------------------------------------------------------------
-// MATRIZ Y COMPARATIVA TSP (GRÁFICO CHART.JS)
+// MATRIZ Y COMPARATIVA TSP
 // -----------------------------------------------------------------------------
 window.verMatrizEuclidiana = async function () {
   const panel = document.getElementById("panel-matriz");
   panel.classList.remove("hidden");
 
-  const data = await ApiService.obtenerMatriz();
-  let html = `<table style="width:100%; border-collapse:collapse; font-size:0.75rem; text-align:center;">`;
-  html +=
-    `<tr><th>Nodo</th>` +
-    data.nombres.map((n, i) => `<th>[${i}]</th>`).join("") +
-    `</tr>`;
-
-  data.matriz.forEach((fila, i) => {
+  try {
+    const data = await ApiService.obtenerMatriz();
+    if (!data || !Array.isArray(data.matriz) || !Array.isArray(data.nombres)) {
+      throw new Error("No se pudo estructurar la matriz euclidiana.");
+    }
+    let html = `<table style="width:100%; border-collapse:collapse; font-size:0.75rem; text-align:center;">`;
     html +=
-      `<tr><td><b>[${i}]</b></td>` +
-      fila
-        .map(
-          (v) =>
-            `<td style="border:1px solid #e2e8f0; padding:4px;">${v.toFixed(2)}</td>`,
-        )
-        .join("") +
+      `<tr><th>Nodo</th>` +
+      data.nombres.map((n, i) => `<th>[${i}]</th>`).join("") +
       `</tr>`;
-  });
-  html += `</table>`;
-  panel.innerHTML = html;
+
+    data.matriz.forEach((fila, i) => {
+      html +=
+        `<tr><td><b>[${i}]</b></td>` +
+        fila
+          .map(
+            (v) =>
+              `<td style="border:1px solid #e2e8f0; padding:4px;">${v.toFixed(2)}</td>`,
+          )
+          .join("") +
+        `</tr>`;
+    });
+    html += `</table>`;
+    panel.innerHTML = html;
+  } catch (err) {
+    panel.innerHTML = `<span style="color:#dc2626;">${err.message}</span>`;
+  }
 };
 
 window.verComparativaGlobal = async function () {
@@ -564,80 +741,104 @@ window.verComparativaGlobal = async function () {
   panel.classList.remove("hidden");
   detalle.innerHTML = "Procesando comparativa algorítmica...";
 
-  const data = await ApiService.obtenerComparativa();
+  try {
+    const data = await ApiService.obtenerComparativa();
+    if (!data || !Array.isArray(data.comparativa)) {
+      throw new Error(
+        "No se obtuvieron resultados de la comparativa algorítmica.",
+      );
+    }
 
-  const labels = data.comparativa.map((c) => c.algoritmo);
-  const distancias = data.comparativa.map((c) =>
-    typeof c.distancia_km === "number"
-      ? c.distancia_km
-      : parseFloat(c.distancia_km),
-  );
+    const labels = data.comparativa.map((c) => c.algoritmo);
+    const distancias = data.comparativa.map((c) =>
+      typeof c.distancia_km === "number"
+        ? c.distancia_km
+        : parseFloat(c.distancia_km),
+    );
 
-  const ctx = document.getElementById("chart-tsp-comparativa").getContext("2d");
-  if (chartComparativaTSP) {
-    chartComparativaTSP.destroy();
+    const ctx = document
+      .getElementById("chart-tsp-comparativa")
+      .getContext("2d");
+    if (chartComparativaTSP) {
+      chartComparativaTSP.destroy();
+    }
+
+    chartComparativaTSP = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Distancia Recorrida (km)",
+            data: distancias,
+            backgroundColor: "#F05816",
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: "Distancia Obtenida por Algoritmo (km)",
+          },
+        },
+        scales: {
+          y: {
+            min: 20,
+            title: { display: true, text: "Kilómetros" },
+          },
+        },
+      },
+    });
+
+    let html = `<ul style="padding-left:14px; font-size:0.75rem; margin-top:8px;">`;
+    data.comparativa.forEach((c) => {
+      html += `<li style="margin-bottom:6px;">
+        <b>${c.algoritmo}:</b> ${c.distancia_km} km | Tiempo: ${(c.tiempo_s * 1000).toFixed(3)} ms<br>
+        <small style="color:#64748b;">${c.ruta}</small>
+      </li>`;
+    });
+    html += `</ul>`;
+    detalle.innerHTML = html;
+  } catch (err) {
+    detalle.innerHTML = `<span style="color:#dc2626;">Error: ${err.message}</span>`;
   }
-
-  chartComparativaTSP = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "Distancia Recorrida (km)",
-          data: distancias,
-          backgroundColor: "#2563eb",
-          borderRadius: 4,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: false },
-        title: {
-          display: true,
-          text: "Distancia Obtenida por Algoritmo (km)",
-        },
-      },
-      scales: {
-        y: {
-          min: 20,
-          title: { display: true, text: "Kilómetros" },
-        },
-      },
-    },
-  });
-
-  let html = `<ul style="padding-left:14px; font-size:0.75rem; margin-top:8px;">`;
-  data.comparativa.forEach((c, idx) => {
-    html += `<li style="margin-bottom:6px;">
-      <b>${c.algoritmo}:</b> ${c.distancia_km} km | Tiempo: ${(c.tiempo_s * 1000).toFixed(3)} ms<br>
-      <small style="color:#64748b;">${c.ruta}</small>
-    </li>`;
-  });
-  html += `</ul>`;
-  detalle.innerHTML = html;
 };
 
 // -----------------------------------------------------------------------------
 // SIMULACIÓN Y COTIZADOR DIRECTO
 // -----------------------------------------------------------------------------
 window.simularTrafico = async function () {
+  const inpDist = document.getElementById("inp-sim-dist");
   const panel = document.getElementById("panel-montecarlo");
+  const dist = parseFloat(inpDist ? inpDist.value : "");
+
+  if (isNaN(dist) || dist <= 0) {
+    mostrarAviso(
+      "Campo Requerido",
+      "Por favor, ingrese una distancia en kilómetros válida y mayor a 0 para simular el tráfico.",
+    );
+    if (inpDist) inpDist.focus();
+    return;
+  }
+
   panel.classList.remove("hidden");
   panel.innerHTML = "Ejecutando 5,000 escenarios probabilísticos...";
 
-  let dist = parseFloat(document.getElementById("inp-sim-dist").value);
-  if (isNaN(dist) || dist <= 0) dist = distanciaRutaActualKm;
-
-  const data = await ApiService.simularTrafico(dist);
-  panel.innerHTML = `
-    <b>Resultados para ${dist} km:</b><br>
-    - Tiempo Promedio Esperado: <b>${data.tiempo_promedio_min} min</b><br>
-    - Escenario Fluido (Mejor Caso): <b>${data.tiempo_mejor_caso_min} min</b><br>
-    - Congestión Severa (Peor Caso): <b>${data.tiempo_peor_caso_min} min</b>
-  `;
+  try {
+    const data = await ApiService.simularTrafico(dist);
+    panel.innerHTML = `
+      <b>Resultados para ${dist.toFixed(2)} km:</b><br>
+      - Tiempo Promedio Esperado: <b>${data.tiempo_promedio_min} min</b><br>
+      - Escenario Fluido (Mejor Caso): <b>${data.tiempo_mejor_caso_min} min</b><br>
+      - Congestión Severa (Peor Caso): <b>${data.tiempo_peor_caso_min} min</b>
+    `;
+  } catch (err) {
+    panel.innerHTML = `<span style="color:#dc2626;">Error: ${err.message}</span>`;
+  }
 };
 
 window.activarModoSeleccionDirecta = function (tipo) {
@@ -646,15 +847,17 @@ window.activarModoSeleccionDirecta = function (tipo) {
   const btnB = document.getElementById("btn-pick-dir-destino");
 
   if (tipo === "origen") {
-    btnA.style.backgroundColor = "#16a34a";
+    btnA.style.backgroundColor = "#F05816";
     btnA.style.color = "#ffffff";
     btnB.style.backgroundColor = "";
     btnB.style.color = "";
+    mostrarMensaje("Haga clic en el mapa para fijar el Origen (A)");
   } else {
-    btnB.style.backgroundColor = "#dc2626";
+    btnB.style.backgroundColor = "#F05816";
     btnB.style.color = "#ffffff";
     btnA.style.backgroundColor = "";
     btnA.style.color = "";
+    mostrarMensaje("Haga clic en el mapa para fijar el Destino (B)");
   }
 };
 
@@ -684,13 +887,43 @@ window.manejarClicDirecta = async function (lat, lng) {
 };
 
 window.cotizarDirecta = async function () {
-  const origen =
-    document.getElementById("inp-dir-origen").value.trim() || "Santa Anita";
-  const destino =
-    document.getElementById("inp-dir-destino").value.trim() || "San Luis";
-  const km = parseFloat(document.getElementById("inp-dir-km").value) || 20;
+  const inpOrigen = document.getElementById("inp-dir-origen");
+  const inpDestino = document.getElementById("inp-dir-destino");
+  const inpKm = document.getElementById("inp-dir-km");
   const vehiculo = document.getElementById("sel-dir-vehiculo").value;
   const panel = document.getElementById("panel-directa");
+
+  const origen = inpOrigen ? inpOrigen.value.trim() : "";
+  const destino = inpDestino ? inpDestino.value.trim() : "";
+  const km = parseFloat(inpKm ? inpKm.value : "");
+
+  if (!origen) {
+    mostrarAviso(
+      "Origen Requerido",
+      "Por favor, ingrese el punto de partida o márquelo en el mapa con 'Fijar A'.",
+    );
+    if (inpOrigen) inpOrigen.focus();
+    return;
+  }
+
+  if (!destino) {
+    mostrarAviso(
+      "Destino Requerido",
+      "Por favor, ingrese el punto de llegada o márquelo en el mapa con 'Fijar B'.",
+    );
+    if (inpDestino) inpDestino.focus();
+    return;
+  }
+
+  if (isNaN(km) || km <= 0) {
+    mostrarAviso(
+      "Distancia Requerida",
+      "Debe ingresar una distancia válida mayor a 0 km (o seleccionar ambos puntos en el mapa).",
+    );
+    if (inpKm) inpKm.focus();
+    return;
+  }
+
   panel.classList.remove("hidden");
 
   try {
@@ -720,27 +953,52 @@ window.cotizarDirecta = async function () {
 // FINANZAS Y RESTABLECIMIENTO
 // -----------------------------------------------------------------------------
 window.calcularCambio = async function () {
-  const p = document.getElementById("inp-pago").value;
-  const c = document.getElementById("inp-costo").value;
+  const inpP = document.getElementById("inp-pago");
+  const inpC = document.getElementById("inp-costo");
   const panel = document.getElementById("panel-vuelto-calc");
+
+  const p = parseFloat(inpP ? inpP.value : "");
+  const c = parseFloat(inpC ? inpC.value : "");
+
+  if (isNaN(p) || isNaN(c)) {
+    mostrarAviso(
+      "Campos Incompletos",
+      "Por favor, ingrese tanto el monto abonado como el costo del pedido antes de continuar.",
+    );
+    return;
+  }
+
+  if (p < c) {
+    mostrarAviso(
+      "Monto Insuficiente",
+      "El monto abonado no puede ser menor al costo total del pedido.",
+    );
+    return;
+  }
+
   panel.classList.remove("hidden");
 
   try {
     const data = await ApiService.calcularVuelto(p, c);
-    let desg = data.desglose
+    if (!data || !Array.isArray(data.desglose)) {
+      throw new Error(
+        data?.detail || "No se pudo calcular el desglose de monedas.",
+      );
+    }
+    const desg = data.desglose
       .map(
         (m) => `Denominación: S/. ${m.denominacion} | Cantidad: ${m.cantidad}`,
       )
       .join("<br>");
     panel.innerHTML = `<b>Vuelto a Entregar: S/. ${data.vuelto_total}</b><br><small>${desg}</small>`;
   } catch (err) {
-    panel.innerHTML = `<span style="color:#dc2626;">${err.message}</span>`;
+    panel.innerHTML = `<span style="color:#dc2626;">Error: ${err.message}</span>`;
   }
 };
 
 window.solicitarRestablecimiento = function () {
   mostrarConfirmacion(
-    "Restablecer  Datos",
+    "Restablecer Datos",
     "¿Está seguro de restablecer todos los puntos y tramos iniciales?",
     async () => {
       await ApiService.restablecerDatos();
