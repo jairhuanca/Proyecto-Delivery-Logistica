@@ -3,6 +3,7 @@
 MÓDULO DE ALGORITMOS AVANZADOS Y ESTRATEGIAS ESPECIALIZADAS
 Incluye: Búsqueda con descarte rápido (Backtracking), Optimización con memoria (Programación Dinámica),
 Simulación de tráfico con imprevistos (Monte Carlo) y Cálculo en varios procesadores (Paralelismo).
+GRUPO 5
 """
 
 import math
