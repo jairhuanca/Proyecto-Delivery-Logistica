@@ -1,4 +1,4 @@
-# Sistema de Logística y Rutas de Entrega (Full Stack)
+# Sistema de Logística y Rutas de Entrega 
 
 Este proyecto es una plataforma web integral enfocada en la gestión logística y el control de rutas de entrega. La arquitectura está dividida en un enfoque Full Stack, separando la lógica del servidor (Backend) de la interfaz de usuario (Frontend), lo que permite una mayor escalabilidad y facilidad de mantenimiento.
 
